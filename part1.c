@@ -1,214 +1,207 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MIN_N 3
-#define MAX_N 10
+#define min 3
+#define max 10
 
-/* Global variables */
-char board[MAX_N][MAX_N];
-int N;
-int WIN_COUNT;
+char board[max][max];
+int n,i,j,k;
+int winRow;
 int lastRow = -1, lastCol = -1;
 FILE *logFile;
 
-/* --- FUNCTION DEFINITIONS --- */
-
 // Display board
-void displayBoard() {
-    system(
-#if defined(_WIN32) || defined(_WIN64)
-        "cls"
-#else
-        "clear"
-#endif
-    );
+void displayBoard(){
+	system("clear");//clears the terminal and only show the current game frame
 
-    printf("\nTic Tac Toe (%d x %d) - %d in a row to win\n\n", N, N, WIN_COUNT);
+    printf("\nTic Tac Toe (%dx%d) - %d in a row to win\n",n,n,winRow);
 
     // Calculate spacing for column numbers
-    printf("    ");
-    for (int j = 0; j < N; j++) {
-        if (j + 1 < 10)
-            printf("  %d  ", j + 1); // single digit
+    printf("   ");
+    for (j=0;j<n;j++) {
+        if (j+1<10)
+            printf("   %d  ",j+1); // single digit column numbers
         else
-            printf(" %d  ", j + 1);  // double digit
+            printf("  %d   ",j+1);  // double digit columns numbers(10)
     }
     printf("\n");
 
-    // Top border
+    // Top border of the board
     printf("   ");
-    for (int j = 0; j < N; j++) printf("------");
-    printf("\n");
+    for (j=0;j<n;j++) printf("------");
+    printf("-\n");
 
-    for (int i = 0; i < N; i++) {
-        // Row number + left border
-        if (i + 1 < 10)
-            printf(" %d |", i + 1);
+    for (i=0;i<n;i++){
+        // Row number + left border of the board
+        if (i+1<10)
+            printf(" %d |",i+1);
         else
-            printf("%d |", i + 1);
+            printf("%d |",i+1);
 
-        for (int j = 0; j < N; j++) {
+        for (j=0;j<n;j++){
             if (i == lastRow && j == lastCol)
-                printf(" *%c* |", board[i][j]);
+                printf(" *%c* |", board[i][j]);//show the last come highlighted like *X*
             else
                 printf("  %c  |", board[i][j]);
         }
         printf("\n");
 
-        // Horizontal divider
+        // Horizontal divider of the board
         printf("   ");
-        for (int j = 0; j < N; j++) printf("------");
-        printf("\n");
+        for (j=0;j<n;j++) printf("------");
+        printf("-\n");
     }
 
     printf("\n");
 }
 
-// Log board to file
-void logBoard(char player) {
+// Logging gameplay to file
+void logBoard(char player){
     fprintf(logFile, "Player %c made a move:\n", player);
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) fprintf(logFile, "%c ", board[i][j]);
+    for (i=0;i<n;i++){
+        for (j=0;j<n;j++) fprintf(logFile, "%c ", board[i][j]);
         fprintf(logFile, "\n");
     }
     fprintf(logFile, "\n");
 }
 
-// Check if draw
-int isDraw() {
-    for (int i = 0; i < N; i++)
-        for (int j = 0; j < N; j++)
-            if (board[i][j] == ' ') return 0;
+// Check if its draw
+int checkDraw(){
+    for (i=0;i<n;i++)
+        for (j=0;j<n;j++)
+            if (board[i][j]==' ') return 0;
     return 1;
 }
 
-// Validate move
-int isValidMove(int row, int col) {
-    return (row >= 0 && row < N && col >= 0 && col < N && board[row][col] == ' ');
+// Validate move of players
+int checkValidMove(int row,int col){
+    return (row>=0 && row<n && col>=0 && col<n && board[row][col]==' ');
 }
 
 // Player input
-void playerMove(char player) {
-    int row, col;
+void playerMove(char player){
+    int row,col;
     while (1) {
-        printf("Player %c, enter move (row col, 1-%d): ", player, N);
-        if (scanf("%d %d", &row, &col) != 2) {
-            while (getchar() != '\n'); // flush buffer
-            printf("Invalid input. Try again.\n");
+	printf("Player %c, where would you like to place your mark? (row col, 1-%d): ", player, n);
+	if (scanf("%d %d",&row,&col)!=2){
+            while (getchar()!='\n');
+	    printf("Oops! That spot is taken or invalid. Please try again.\n");
             continue;
         }
         row--; col--;
-        if (isValidMove(row, col)) {
-            board[row][col] = player;
-            lastRow = row;
-            lastCol = col;
+        if (checkValidMove(row, col)) {
+            board[row][col]=player;
+            lastRow=row;
+            lastCol=col;
             break;
         } else {
-            printf("Invalid move. Try again.\n");
-        }
+		printf("Oops! That spot is taken or invalid. Please try again.\n");
+	}
     }
 }
+// Checking for winner
+int checkWinner(){
+    // Row checking
+    for (i=0;i<n;i++)
+        for (j=0;j<=n-winRow;j++){
+            char first=board[i][j];
+            if (first==' ')continue;
+            int win=1;
+            for (k=1;k<winRow;k++)
+                if (board[i][j+k]!=first){win=0;break;}
+            if (win) return first;
+	}
 
-// Check winner
-int checkWinner() {
-    // Rows
-    for (int i = 0; i < N; i++)
-        for (int j = 0; j <= N - WIN_COUNT; j++) {
-            char first = board[i][j];
-            if (first == ' ') continue;
-            int win = 1;
-            for (int k = 1; k < WIN_COUNT; k++)
-                if (board[i][j+k] != first) { win = 0; break; }
+    // Columns checking
+    for (j=0;j<n;j++)
+        for (i=0;i<=n-winRow;i++){
+            char first=board[i][j];
+            if (first==' ')continue;
+            int win=1;
+            for (k=1;k<winRow;k++)
+                if (board[i+k][j]!=first){win=0;break;}
             if (win) return first;
         }
 
-    // Columns
-    for (int j = 0; j < N; j++)
-        for (int i = 0; i <= N - WIN_COUNT; i++) {
-            char first = board[i][j];
-            if (first == ' ') continue;
-            int win = 1;
-            for (int k = 1; k < WIN_COUNT; k++)
-                if (board[i+k][j] != first) { win = 0; break; }
+    // Diagonals checking
+    for (i=0;i<=n-winRow;i++)
+        for (j=0;j<=n-winRow;j++){
+            char first=board[i][j];
+            if (first==' ') continue;
+            int win=1;
+            for (k=1;k<winRow;k++)
+                if (board[i+k][j+k]!=first){win=0;break;}
             if (win) return first;
         }
 
-    // Diagonals
-    for (int i = 0; i <= N - WIN_COUNT; i++)
-        for (int j = 0; j <= N - WIN_COUNT; j++) {
-            char first = board[i][j];
-            if (first == ' ') continue;
-            int win = 1;
-            for (int k = 1; k < WIN_COUNT; k++)
-                if (board[i+k][j+k] != first) { win = 0; break; }
-            if (win) return first;
-        }
-
-    // Anti-diagonals
-    for (int i = 0; i <= N - WIN_COUNT; i++)
-        for (int j = WIN_COUNT - 1; j < N; j++) {
-            char first = board[i][j];
-            if (first == ' ') continue;
-            int win = 1;
-            for (int k = 1; k < WIN_COUNT; k++)
-                if (board[i+k][j-k] != first) { win = 0; break; }
+    // Anti-diagonals checking
+    for (i=0;i<=n-winRow;i++)
+        for (j=winRow-1;j<n;j++){
+            char first=board[i][j];
+            if (first==' ') continue;
+            int win=1;
+            for (k=1;k<winRow;k++)
+                if (board[i+k][j-k]!=first){win=0;break;}
             if (win) return first;
         }
 
     return 0;
 }
 
-// Setup game
-void setupGame() {
-    for (int i = 0; i < N; i++)
-        for (int j = 0; j < N; j++)
-            board[i][j] = ' ';
+// Setup game 
+void setupGame(){
+    for (i=0;i<n;i++)
+        for (j=0;j<n;j++)
+            board[i][j]=' ';
 
-    logFile = fopen("game_log.txt", "w");
+    logFile = fopen("game_log.txt", "w");//writes the current game logs only
     if (!logFile) {
         printf("Error: Cannot open log file.\n");
         exit(1);
     }
-
-    if (N <= 4) WIN_COUNT = 3;
-    else if (N <= 7) WIN_COUNT = 4;
-    else WIN_COUNT = 5;
+    //this is to decide how many in a row are needed to win based on the board size
+    if (n<=4) winRow=3;//for 3 & 4 grid 3 in a row
+    else if (n<=7) winRow=4;//for 5 to 7 grid 4 in a row
+    else winRow=5;//for 8 to 10 grid 5 in a row
 }
 
 // Close game
-void closeGame() {
+void closeGame(){
     fclose(logFile);
 }
 
 // Main control
-void playGame() {
-    char current = 'X';
-    int winner = 0;
+void playGame(){
+    char current='X';
+    int winner=0;
 
-    while (!winner && !isDraw()) {
+    while (!winner && !checkDraw()){
         displayBoard();
         playerMove(current);
         logBoard(current);
 
-        winner = checkWinner();
-        if (!winner) current = (current == 'X') ? 'O' : 'X';
+        winner=checkWinner();
+        if (!winner) current= (current=='X') ? 'O' : 'X';
     }
 
     displayBoard();
+    printf("\n>>> Game Over! <<<\n");
     if (winner)
-        printf(">>> Player %c wins! <<<\n", winner);
+        printf("Player %c wins!\n",winner);
     else
-        printf(">>> It's a draw! <<<\n");
+        printf("It's a draw!\nWell played both!\n");
+    printf("Thanks for playing!\nWant to play again(y/n)?\n");
+    
 }
 
 // Main function
-int main(void) {
-    printf("=== Tic Tac Toe (Part 1: Two Players) ===\n");
-    printf("Enter board size N (%d–%d): ", MIN_N, MAX_N);
-    scanf("%d", &N);
+int main(void){
+    printf("--- Tic Tac Toe ---\n");
+    printf("Enter board size (%d–%d): ",min,max);
+    scanf("%d",&n);
 
-    if (N < MIN_N || N > MAX_N) {
-        printf("Invalid board size. Exiting.\n");
+    if (n<min || n>max){
+        printf("Invalid board size. Exiting game.\n");
         return 1;
     }
 
@@ -218,4 +211,3 @@ int main(void) {
 
     return 0;
 }
-

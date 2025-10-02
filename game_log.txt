@@ -5,21 +5,36 @@ X
 
 Player O made a move:
 X     
+  O   
       
-    O 
 
 Player X made a move:
-X X   
-      
-    O 
+X     
+  O   
+    X 
 
 Player O made a move:
-X X   
+X O   
   O   
-    O 
+    X 
 
 Player X made a move:
-X X X 
+X O   
   O   
-    O 
+  X X 
+
+Player O made a move:
+X O   
+  O   
+O X X 
+
+Player X made a move:
+X O   
+X O   
+O X X 
+
+Player O made a move:
+X O O 
+X O   
+O X X 
 
